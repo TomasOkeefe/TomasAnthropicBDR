@@ -144,17 +144,11 @@
                         </div>
                         <div class="terminal-title">TOMAS_KERNEL.SH</div>
                     </div>
-                    <div class="terminal-body">
-                        <div class="code-line">
-                            <span class="prompt">_></span>
+                    <div class="terminal-body" id="terminal-output">
+                        <div class="term-line">
+                            <span class="prompt">$</span>
+                            <span class="cursor"></span>
                         </div>
-                        <br>
-                        <div class="code-line">
-                            <span class="prompt">→</span>
-                            <span class="cmd">init_sequence</span>
-                            <span class="flag">--target=Lead_Gen_Optimization</span>
-                        </div>
-                        <div class="cursor"></div>
                     </div>
                 </div>
             </div>
@@ -377,6 +371,10 @@
                 <a href="#">Privacy</a>
             </div>
         </div>
+
+        <div class="claude-code-badge" id="claudeCodeBadge">
+            <pre class="cc-terminal" id="ccTerminal"></pre>
+        </div>
     </footer>
 
     <script>
@@ -402,15 +400,180 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-
-                    if (entry.target.classList.contains('pipeline-section')) {
-                        animateNumbers(entry.target);
-                    }
-
                     observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
+
+        // Separate observer for pipeline section with higher threshold
+        // so number/bar animations only start when user has clearly scrolled to it
+        const pipelineObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    animateNumbers(entry.target);
+                    startTerminal();
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { root: null, rootMargin: '0px', threshold: 0.25 });
+
+        // Terminal cycling animation
+        const terminalCommands = [
+            {
+                cmd: 'anthropic prospect',
+                flags: '--vertical=fintech --signal="api-usage"',
+                output: 'Scanning 2,847 accounts...',
+                result: '43 high-intent prospects identified',
+                highlight: '43'
+            },
+            {
+                cmd: 'pipeline enrich',
+                flags: '--source=hubspot --score=">75"',
+                output: 'Cross-referencing firmographic data...',
+                result: '38 qualified leads | Avg score: 84',
+                highlight: '38'
+            },
+            {
+                cmd: 'sequence deploy',
+                flags: '--cadence=multi-touch --persona="eng-leader"',
+                output: 'Arming 5-step outbound sequence...',
+                result: '38 contacts enrolled | Est. 32% reply rate',
+                highlight: '32%'
+            },
+            {
+                cmd: 'bdr qualify',
+                flags: '--framework=MEDDIC --handoff=AE',
+                output: 'Evaluating decision criteria...',
+                result: '14 SQLs generated | $1.8M pipeline created',
+                highlight: '$1.8M'
+            },
+            {
+                cmd: 'cold-dm send',
+                flags: '--channel=linkedin --template=claude_value_prop',
+                output: 'Personalizing with account signals...',
+                result: '22 messages sent | 8 meetings booked',
+                highlight: '8 meetings'
+            },
+            {
+                cmd: 'crm sync',
+                flags: '--dedupe --push-to=salesforce',
+                output: 'Syncing pipeline to CRM...',
+                result: 'All records current | 0 duplicates',
+                highlight: '0 duplicates'
+            }
+        ];
+
+        let terminalRunning = false;
+
+        function startTerminal() {
+            if (terminalRunning) return;
+            terminalRunning = true;
+            runTerminalLoop();
+        }
+
+        async function runTerminalLoop() {
+            const terminal = document.getElementById('terminal-output');
+            terminal.innerHTML = '';
+            let cmdIndex = 0;
+
+            while (true) {
+                const entry = terminalCommands[cmdIndex];
+
+                // Create command line with prompt and cursor
+                const cmdLine = document.createElement('div');
+                cmdLine.className = 'term-line';
+                cmdLine.innerHTML = '<span class="prompt">$</span><span class="typed"></span><span class="cursor"></span>';
+                terminal.appendChild(cmdLine);
+                scrollTerminal(terminal);
+
+                // Type command
+                const fullCmd = entry.cmd + ' ' + entry.flags;
+                const typedSpan = cmdLine.querySelector('.typed');
+                await typeText(typedSpan, fullCmd, entry.cmd.length);
+
+                // Remove cursor from command line
+                cmdLine.querySelector('.cursor').remove();
+
+                // Show processing output
+                await sleep(400);
+                const outputLine = document.createElement('div');
+                outputLine.className = 'term-line output-line';
+                outputLine.textContent = '→ ' + entry.output;
+                terminal.appendChild(outputLine);
+                scrollTerminal(terminal);
+
+                await sleep(1200);
+
+                // Show success result
+                const successLine = document.createElement('div');
+                successLine.className = 'term-line success-line';
+                const resultText = entry.result;
+                const highlightWord = entry.highlight;
+                const parts = resultText.split(highlightWord);
+                successLine.innerHTML = '<span class="check">✓</span>' +
+                    parts[0] + '<span class="highlight">' + highlightWord + '</span>' + (parts[1] || '');
+                terminal.appendChild(successLine);
+                scrollTerminal(terminal);
+
+                // Blank line
+                const blank = document.createElement('div');
+                blank.className = 'term-line blank';
+                terminal.appendChild(blank);
+
+                cmdIndex = (cmdIndex + 1) % terminalCommands.length;
+
+                // Pause before next command
+                await sleep(2200);
+
+                // Clear old lines if terminal gets too long (keep last 3 command blocks)
+                const lines = terminal.querySelectorAll('.term-line');
+                if (lines.length > 16) {
+                    // Fade out and remove oldest block (4 lines: cmd, output, success, blank)
+                    for (let i = 0; i < 4 && lines[i]; i++) {
+                        lines[i].style.transition = 'opacity 0.3s ease';
+                        lines[i].style.opacity = '0';
+                    }
+                    await sleep(300);
+                    for (let i = 0; i < 4 && terminal.firstChild; i++) {
+                        terminal.removeChild(terminal.firstChild);
+                    }
+                }
+            }
+        }
+
+        async function typeText(el, text, cmdLength) {
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (i < cmdLength) {
+                    // Command part in blue
+                    const span = document.createElement('span');
+                    span.className = 'cmd-text';
+                    span.textContent = char;
+                    el.appendChild(span);
+                } else if (i === cmdLength) {
+                    // Space between cmd and flags
+                    el.appendChild(document.createTextNode(' '));
+                } else {
+                    // Flag part in grey
+                    const span = document.createElement('span');
+                    span.className = 'flag-text';
+                    span.textContent = char;
+                    el.appendChild(span);
+                }
+                // Variable typing speed for realism
+                const delay = 25 + Math.random() * 35;
+                await sleep(delay);
+            }
+        }
+
+        function scrollTerminal(el) {
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
         function animateNumbers(section) {
             const values = section.querySelectorAll('.metric-value');
@@ -451,7 +614,11 @@
         }
 
         document.querySelectorAll('.animate-on-scroll').forEach((section) => {
-            observer.observe(section);
+            if (section.classList.contains('pipeline-section')) {
+                pipelineObserver.observe(section);
+            } else {
+                observer.observe(section);
+            }
         });
 
         // Spin SVG on Scroll
@@ -466,6 +633,123 @@
                 deployBtnSvg.style.transform = `rotate(${rotation}deg)`;
             });
         }
+
+        // Claude Code Badge - Old School Terminal ANSI Art Animation
+        (function () {
+            var terminal = document.getElementById('ccTerminal');
+            var badge = document.getElementById('claudeCodeBadge');
+            if (!terminal || !badge) return;
+
+            // ANSI block-letter art: "CLAUDE CODE" in a box-drawing frame
+            var artLines = [
+                '\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557',
+                '\u2551                                            \u2551',
+                '\u2551  \u2588\u2580\u2580 \u2588   \u2584\u2580\u2584 \u2588 \u2588 \u2588\u2580\u2584 \u2588\u2580\u2580  \u2588\u2580\u2580 \u2584\u2580\u2584 \u2588\u2580\u2584 \u2588\u2580\u2580  \u2551',
+                '\u2551  \u2588   \u2588   \u2588\u2580\u2588 \u2588 \u2588 \u2588 \u2588 \u2588\u2580\u2580  \u2588   \u2588 \u2588 \u2588 \u2588 \u2588\u2580\u2580  \u2551',
+                '\u2551  \u2580\u2580\u2580 \u2580\u2580\u2580 \u2580 \u2580 \u2580\u2584\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580  \u2580\u2580\u2580 \u2580\u2584\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580  \u2551',
+                '\u2551                                            \u2551',
+                'TYPED',
+                '\u2551                                            \u2551',
+                '\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d'
+            ];
+
+            var typedContent = '\u2551  > made with claude code                   \u2551';
+            var FRAME_CHARS = '\u2554\u2550\u2557\u2551\u255a\u255d';
+            var BLOCK_CHARS = '\u2588\u2580\u2584';
+            var hasPlayed = false;
+
+            function getCharClass(ch, isTypedLine, pos) {
+                if (FRAME_CHARS.indexOf(ch) !== -1) return 'cc-frame';
+                if (BLOCK_CHARS.indexOf(ch) !== -1) return 'cc-block';
+                if (isTypedLine && ch === '>') return 'cc-prompt-char';
+                if (isTypedLine && pos >= 15 && pos <= 25) return 'cc-bright';
+                return '';
+            }
+
+            function appendChar(ch, cls) {
+                var span = document.createElement('span');
+                if (cls) span.className = cls;
+                span.textContent = ch;
+                terminal.appendChild(span);
+                return span;
+            }
+
+            function sleep(ms) {
+                return new Promise(function (r) { setTimeout(r, ms); });
+            }
+
+            async function renderLine(line) {
+                for (var i = 0; i < line.length; i++) {
+                    appendChar(line[i], getCharClass(line[i], false, i));
+                }
+                terminal.appendChild(document.createTextNode('\n'));
+            }
+
+            async function typeLine(line) {
+                for (var i = 0; i < line.length; i++) {
+                    appendChar(line[i], getCharClass(line[i], true, i));
+                    // Frame chars type fast, text types slower
+                    if (FRAME_CHARS.indexOf(line[i]) !== -1 || line[i] === ' ') {
+                        await sleep(5);
+                    } else {
+                        await sleep(30 + Math.random() * 25);
+                    }
+                }
+                terminal.appendChild(document.createTextNode('\n'));
+            }
+
+            async function animate() {
+                if (hasPlayed) return;
+                hasPlayed = true;
+                terminal.textContent = '';
+
+                for (var lineIdx = 0; lineIdx < artLines.length; lineIdx++) {
+                    if (artLines[lineIdx] === 'TYPED') {
+                        await typeLine(typedContent);
+                    } else {
+                        await renderLine(artLines[lineIdx]);
+                        await sleep(90);
+                    }
+                }
+
+                // Add blinking cursor
+                var cursor = document.createElement('span');
+                cursor.className = 'cc-cursor';
+                cursor.textContent = '\u2588';
+                terminal.appendChild(cursor);
+
+                // Start periodic glitch on block chars
+                setTimeout(startGlitch, 2000);
+            }
+
+            function startGlitch() {
+                var blockSpans = terminal.querySelectorAll('.cc-block');
+                if (!blockSpans.length) return;
+                var glitchChars = '\u2591\u2592\u2593\u2588\u2580\u2584\u256c\u2560\u2563\u2566\u2569';
+
+                setInterval(function () {
+                    var idx = Math.floor(Math.random() * blockSpans.length);
+                    var span = blockSpans[idx];
+                    var original = span.textContent;
+                    span.textContent = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                    setTimeout(function () {
+                        span.textContent = original;
+                    }, 100);
+                }, 2500 + Math.random() * 1500);
+            }
+
+            // Trigger animation on scroll into view
+            var badgeObserver = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        animate();
+                        badgeObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            badgeObserver.observe(badge);
+        })();
     </script>
 </body>
 
