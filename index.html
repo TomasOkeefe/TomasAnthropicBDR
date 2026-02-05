@@ -452,16 +452,25 @@
     <script>
         // Resume Popup Logic
         function openResume() {
-            document.getElementById('resume-overlay').classList.add('is-open');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling bg
+            console.log('Opening resume popup...');
+            const overlay = document.getElementById('resume-overlay');
+            if (overlay) {
+                overlay.classList.add('is-open');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling bg
+            } else {
+                console.error('Resume overlay element not found!');
+            }
         }
 
         function closeResume(e) {
             // If e is passed (click event), only close if clicked on overlay (background)
             if (e && !e.target.classList.contains('resume-overlay')) return;
 
-            document.getElementById('resume-overlay').classList.remove('is-open');
-            document.body.style.overflow = '';
+            const overlay = document.getElementById('resume-overlay');
+            if (overlay) {
+                overlay.classList.remove('is-open');
+                document.body.style.overflow = '';
+            }
         }
 
         // ── Loading Screen Animation ──
