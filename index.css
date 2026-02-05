@@ -258,6 +258,42 @@ h1 {
     max-width: 900px;
 }
 
+/* Hero Title Slot Machine Hover Effect - triggered by hovering "safe" */
+.hero-title-hover {
+    overflow: hidden;
+    /* Height = line-height (0.95) * font-size (6rem) * 3 lines */
+    height: 17.1rem;
+}
+
+.hero-content {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Trigger animation via JS class */
+.hero-title-hover.is-flipped .hero-content {
+    transform: translateY(-50%);
+}
+
+.safe-trigger {
+    cursor: pointer;
+}
+
+.hero-text,
+.hero-text-alt {
+    display: block;
+    height: 17.1rem;
+}
+
+.hero-text-alt {
+    color: var(--accent-color);
+}
+
+.hero-text-alt .italic-accent {
+    color: var(--text-color);
+}
+
 .italic-accent {
     font-style: italic;
     color: var(--accent-color);
@@ -621,6 +657,15 @@ h1 {
         font-size: 4rem;
     }
 
+    .hero-title-hover {
+        height: 11.4rem;
+    }
+
+    .hero-text,
+    .hero-text-alt {
+        height: 11.4rem;
+    }
+
     .section-title {
         font-size: 3rem;
     }
@@ -645,6 +690,15 @@ h1 {
     h1 {
         font-size: 2.8rem;
         line-height: 1.05;
+    }
+
+    .hero-title-hover {
+        height: 8.82rem;
+    }
+
+    .hero-text,
+    .hero-text-alt {
+        height: 8.82rem;
     }
 
     header {
@@ -855,6 +909,15 @@ h1 {
 @media (max-width: 480px) {
     h1 {
         font-size: 2.2rem;
+    }
+
+    .hero-title-hover {
+        height: 6.93rem;
+    }
+
+    .hero-text,
+    .hero-text-alt {
+        height: 6.93rem;
     }
 
     .hero-section {

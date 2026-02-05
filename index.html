@@ -76,14 +76,23 @@
                 Cold DM 3.5
             </div>
 
-            <h1>
-                Driving the<br>
-                adoption of <span class="italic-accent">safe,</span><br>
-                frontier AI.
+            <h1 class="hero-title-hover">
+                <span class="hero-content">
+                    <span class="hero-text">
+                        Driving the<br>
+                        adoption of <span class="italic-accent safe-trigger">safe,</span><br>
+                        frontier AI.
+                    </span>
+                    <span class="hero-text-alt">
+                        Please hire me<br>
+                        this took <span class="italic-accent">way</span><br>
+                        too much work lol
+                    </span>
+                </span>
             </h1>
 
             <p class="subtitle">
-                A strategic BDR optimized for high-velocity adoption and market expansion.
+                I'm a strategic BDR optimized for high-velocity adoption and market expansion.
             </p>
 
             <div class="cta-group">
@@ -824,6 +833,29 @@
                 deployBtnSvg.style.transform = `rotate(${rotation}deg)`;
             });
         }
+
+        // Hero "safe" hover trigger - flips for 2 seconds then returns
+        (function() {
+            const safeTrigger = document.querySelector('.safe-trigger');
+            const heroTitle = document.querySelector('.hero-title-hover');
+            if (!safeTrigger || !heroTitle) return;
+
+            let isAnimating = false;
+
+            safeTrigger.addEventListener('mouseenter', () => {
+                if (isAnimating) return;
+                isAnimating = true;
+                heroTitle.classList.add('is-flipped');
+
+                setTimeout(() => {
+                    heroTitle.classList.remove('is-flipped');
+                    // Small delay before allowing re-trigger
+                    setTimeout(() => {
+                        isAnimating = false;
+                    }, 400);
+                }, 2000);
+            });
+        })();
 
         // Claude Code Badge - Old School Terminal ANSI Art Animation
         (function () {
