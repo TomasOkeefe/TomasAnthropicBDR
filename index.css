@@ -1372,7 +1372,7 @@ footer {
 .loading-screen {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 10000;
     background-color: #0a0a0a;
     display: flex;
     align-items: center;
@@ -1383,6 +1383,39 @@ footer {
 .loading-screen.fade-out {
     opacity: 0;
     pointer-events: none;
+}
+
+.loading-screen.genie-out {
+    animation: genieEffect 0.65s cubic-bezier(0.4, 0, 1, 1) forwards;
+    pointer-events: none;
+}
+
+@keyframes genieEffect {
+    0% {
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        transform: translateY(0);
+        opacity: 1;
+    }
+    25% {
+        clip-path: polygon(5% 0%, 95% 0%, 62% 100%, 38% 100%);
+        transform: translateY(12vh);
+        opacity: 1;
+    }
+    50% {
+        clip-path: polygon(18% 0%, 82% 0%, 55% 100%, 45% 100%);
+        transform: translateY(40vh);
+        opacity: 1;
+    }
+    75% {
+        clip-path: polygon(38% 0%, 62% 0%, 52% 100%, 48% 100%);
+        transform: translateY(68vh);
+        opacity: 0.7;
+    }
+    100% {
+        clip-path: polygon(49% 50%, 51% 50%, 50.2% 100%, 49.8% 100%);
+        transform: translateY(92vh);
+        opacity: 0;
+    }
 }
 
 .loading-terminal {

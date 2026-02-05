@@ -395,147 +395,64 @@
             var terminal = document.getElementById('loadingTerminal');
             if (!screen || !terminal) return;
 
-            var BOX_TL = '\u256d';
-            var BOX_TR = '\u256e';
-            var BOX_BL = '\u2570';
-            var BOX_BR = '\u256f';
-            var BOX_H = '\u2500';
-            var BOX_V = '\u2502';
-            var STAR = '\u2733';
-
-            var W = 46; // inner width of box
-
-            function pad(str, len) {
-                while (str.length < len) str += ' ';
-                return str;
-            }
-
-            function boxTop() { return BOX_TL + repeat(BOX_H, W) + BOX_TR; }
-            function boxBot() { return BOX_BL + repeat(BOX_H, W) + BOX_BR; }
-            function boxRow(content) { return BOX_V + ' ' + pad(content, W - 2) + ' ' + BOX_V; }
-            function boxEmpty() { return boxRow(''); }
-            function repeat(ch, n) { var s = ''; for (var i = 0; i < n; i++) s += ch; return s; }
-
-            // Build the sequence of lines
-            var lines = [
-                { text: '$ claude', type: 'cmd', delay: 0 },
-                { text: '', type: 'blank', delay: 300 },
-                { text: boxTop(), type: 'box', delay: 100 },
-                { text: boxEmpty(), type: 'box', delay: 30 },
-                { text: boxRow(STAR + ' Claude Code        v1.0.28'), type: 'title', delay: 30 },
-                { text: boxEmpty(), type: 'box', delay: 30 },
-                { text: boxRow('  Loading pipeline data...'), type: 'task', delay: 600, taskIndex: 0 },
-                { text: boxRow('  Compiling outbound sequences...'), type: 'task', delay: 800, taskIndex: 1 },
-                { text: boxRow('  Calibrating BDR parameters...'), type: 'task', delay: 700, taskIndex: 2 },
-                { text: boxRow('  Deploying Tomas O\'Keefe...'), type: 'task', delay: 900, taskIndex: 3 },
-                { text: boxEmpty(), type: 'box', delay: 30 },
-                { text: boxBot(), type: 'box', delay: 100 },
-                { text: '', type: 'blank', delay: 200 },
-                { text: '> Ready. All systems operational.', type: 'done', delay: 400 },
-            ];
-
-            var spinnerFrames = ['\u280b', '\u2819', '\u2839', '\u2838', '\u283c', '\u2834', '\u2826', '\u2827', '\u2807', '\u280f'];
-            var taskEls = [];
-            var lineEls = [];
-
-            // Render all lines hidden
-            lines.forEach(function (line, i) {
-                var div = document.createElement('div');
-                div.className = 'lt-line';
-                div.style.minHeight = '1.8em';
-
-                if (line.type === 'cmd') {
-                    div.innerHTML = '<span class="lt-prompt">$ </span><span class="lt-cmd"></span><span class="lt-cursor"></span>';
-                } else if (line.type === 'title') {
-                    var inner = line.text;
-                    // Colorize the star and title
-                    inner = inner.replace(STAR + ' Claude Code', '<span class="lt-title">' + STAR + ' Claude Code</span>');
-                    inner = inner.replace('v1.0.28', '<span class="lt-subtitle">v1.0.28</span>');
-                    div.innerHTML = '<span class="lt-box-line">' + inner + '</span>';
-                } else if (line.type === 'box') {
-                    div.innerHTML = '<span class="lt-box-line">' + line.text + '</span>';
-                } else if (line.type === 'task') {
-                    // We'll update this dynamically with spinner -> checkmark
-                    var taskText = line.text;
-                    div.innerHTML = '<span class="lt-box-line">' + taskText + '</span>';
-                    div.setAttribute('data-task', line.taskIndex);
-                    taskEls.push(div);
-                } else if (line.type === 'done') {
-                    div.innerHTML = '<span class="lt-check">\u2713</span> <span class="lt-accent">Ready.</span> All systems operational.';
-                } else {
-                    div.textContent = line.text;
-                }
-
-                terminal.appendChild(div);
-                lineEls.push(div);
-            });
-
-            // Animation sequence
-            async function animate() {
-                // Type the command first
-                var cmdSpan = lineEls[0].querySelector('.lt-cmd');
-                var cursorSpan = lineEls[0].querySelector('.lt-cursor');
-                lineEls[0].classList.add('visible');
-
-                var cmdText = 'claude';
-                for (var c = 0; c < cmdText.length; c++) {
-                    cmdSpan.textContent += cmdText[c];
-                    await slp(60 + Math.random() * 40);
-                }
-                cursorSpan.remove();
-
-                await slp(500);
-
-                // Show box lines one by one
-                for (var i = 1; i < lineEls.length; i++) {
-                    var line = lines[i];
-                    lineEls[i].classList.add('visible');
-
-                    if (line.type === 'task') {
-                        // Show spinner, wait, then replace with checkmark
-                        await runTask(lineEls[i], line);
-                    } else {
-                        await slp(line.delay);
-                    }
-                }
-
-                // Hold for a moment then fade out
-                await slp(600);
-                screen.classList.add('fade-out');
-                await slp(700);
-                screen.remove();
-            }
-
-            async function runTask(el, line) {
-                var boxLine = el.querySelector('.lt-box-line');
-                var origText = line.text;
-                // Extract task description from box row
-                var desc = origText.substring(2, origText.length - 1); // strip box chars
-                var trimmed = desc.replace(/\s+$/, '');
-
-                // Show spinner
-                var frame = 0;
-                var interval = setInterval(function () {
-                    var spinner = '<span class="lt-spinner">' + spinnerFrames[frame % spinnerFrames.length] + '</span>';
-                    boxLine.innerHTML = '<span class="lt-box-line">' + BOX_V + trimmed + ' ' + spinner + pad('', origText.length - trimmed.length - 5) + BOX_V + '</span>';
-                    frame++;
-                }, 80);
-
-                await slp(line.delay);
-                clearInterval(interval);
-
-                // Replace with checkmark
-                boxLine.innerHTML = '<span class="lt-box-line">' + BOX_V + trimmed + ' <span class="lt-check">\u2713</span>' + pad('', origText.length - trimmed.length - 5) + BOX_V + '</span>';
-            }
-
             function slp(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-            // Prevent body from showing content until loading is done
-            document.body.style.overflow = 'hidden';
-            screen.addEventListener('transitionend', function () {
-                document.body.style.overflow = '';
-            });
+            async function animate() {
+                // Line 1: type "$ bash"
+                var cmdLine = document.createElement('div');
+                cmdLine.className = 'lt-line visible';
+                cmdLine.innerHTML = '<span class="lt-prompt">$ </span><span class="lt-cmd"></span><span class="lt-cursor"></span>';
+                terminal.appendChild(cmdLine);
 
+                var cmdSpan = cmdLine.querySelector('.lt-cmd');
+                var cursorSpan = cmdLine.querySelector('.lt-cursor');
+
+                var cmdText = 'bash';
+                for (var c = 0; c < cmdText.length; c++) {
+                    cmdSpan.textContent += cmdText[c];
+                    await slp(50 + Math.random() * 40);
+                }
+
+                await slp(300);
+                cursorSpan.remove();
+
+                // Line 2: output text
+                var outputLine = document.createElement('div');
+                outputLine.className = 'lt-line visible';
+                outputLine.innerHTML = '<span class="lt-accent">Overengineering job application...</span>';
+                terminal.appendChild(outputLine);
+
+                // Brief spinner
+                var spinnerFrames = ['\u280b', '\u2819', '\u2839', '\u2838', '\u283c', '\u2834', '\u2826', '\u2827', '\u2807', '\u280f'];
+                var spinnerLine = document.createElement('div');
+                spinnerLine.className = 'lt-line visible';
+                spinnerLine.innerHTML = '<span class="lt-spinner">' + spinnerFrames[0] + '</span>';
+                terminal.appendChild(spinnerLine);
+
+                var frame = 0;
+                var spinnerSpan = spinnerLine.querySelector('.lt-spinner');
+                var spinnerInterval = setInterval(function () {
+                    frame++;
+                    spinnerSpan.textContent = spinnerFrames[frame % spinnerFrames.length];
+                }, 80);
+
+                await slp(800);
+                clearInterval(spinnerInterval);
+
+                // Replace spinner with checkmark
+                spinnerLine.innerHTML = '<span class="lt-check">\u2713</span> <span style="color:#eee;">Done.</span>';
+
+                await slp(400);
+
+                // Genie minimize effect
+                screen.classList.add('genie-out');
+                screen.addEventListener('animationend', function () {
+                    screen.remove();
+                    document.body.style.overflow = '';
+                });
+            }
+
+            document.body.style.overflow = 'hidden';
             animate();
         })();
 
