@@ -395,68 +395,84 @@
             var terminal = document.getElementById('loadingTerminal');
             if (!screen || !terminal) return;
 
+            // SAFETY VALVE: Force remove after 5 seconds no matter what
+            // This prevents the "infinite load" issue on GitHub Pages if JS halts or async acts up
+            var safetyTimeout = setTimeout(function () {
+                console.warn('Loading screen safety timeout triggered.');
+                removeScreen();
+            }, 5000);
+
             function slp(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-            async function animate() {
-                // Line 1: type "$ bash"
-                var cmdLine = document.createElement('div');
-                cmdLine.className = 'lt-line visible';
-                cmdLine.innerHTML = '<span class="lt-prompt">$ </span><span class="lt-cmd"></span><span class="lt-cursor"></span>';
-                terminal.appendChild(cmdLine);
-
-                var cmdSpan = cmdLine.querySelector('.lt-cmd');
-                var cursorSpan = cmdLine.querySelector('.lt-cursor');
-
-                var cmdText = 'bash';
-                for (var c = 0; c < cmdText.length; c++) {
-                    cmdSpan.textContent += cmdText[c];
-                    await slp(50 + Math.random() * 40);
-                }
-
-                await slp(300);
-                cursorSpan.remove();
-
-                // Line 2: output text
-                var outputLine = document.createElement('div');
-                outputLine.className = 'lt-line visible';
-                outputLine.innerHTML = '<span class="lt-accent">Overengineering job application...</span>';
-                terminal.appendChild(outputLine);
-
-                // Brief spinner
-                var spinnerFrames = ['\u280b', '\u2819', '\u2839', '\u2838', '\u283c', '\u2834', '\u2826', '\u2827', '\u2807', '\u280f'];
-                var spinnerLine = document.createElement('div');
-                spinnerLine.className = 'lt-line visible';
-                spinnerLine.innerHTML = '<span class="lt-spinner">' + spinnerFrames[0] + '</span>';
-                terminal.appendChild(spinnerLine);
-
-                var frame = 0;
-                var spinnerSpan = spinnerLine.querySelector('.lt-spinner');
-                var spinnerInterval = setInterval(function () {
-                    frame++;
-                    spinnerSpan.textContent = spinnerFrames[frame % spinnerFrames.length];
-                }, 80);
-
-                await slp(800);
-                clearInterval(spinnerInterval);
-
-                // Replace spinner with checkmark
-                spinnerLine.innerHTML = '<span class="lt-check">\u2713</span> <span style="color:#eee;">Done.</span>';
-
-                await slp(400);
-
-                // Genie minimize effect
-                screen.classList.add('genie-out');
-
-                // Use both animationend and timeout fallback for reliability
-                var removed = false;
-                function removeScreen() {
-                    if (removed) return;
-                    removed = true;
+            var removed = false;
+            function removeScreen() {
+                if (removed) return;
+                removed = true;
+                clearTimeout(safetyTimeout); // Clear safety valve if we finished normally
+                if (screen && screen.parentNode) {
                     screen.remove();
-                    document.body.style.overflow = '';
                 }
-                screen.addEventListener('animationend', removeScreen);
-                setTimeout(removeScreen, 700); // fallback
+                document.body.style.overflow = '';
+            }
+
+            async function animate() {
+                try {
+                    // Line 1: type "$ bash"
+                    var cmdLine = document.createElement('div');
+                    cmdLine.className = 'lt-line visible';
+                    cmdLine.innerHTML = '<span class="lt-prompt">$ </span><span class="lt-cmd"></span><span class="lt-cursor"></span>';
+                    terminal.appendChild(cmdLine);
+
+                    var cmdSpan = cmdLine.querySelector('.lt-cmd');
+                    var cursorSpan = cmdLine.querySelector('.lt-cursor');
+
+                    var cmdText = 'bash';
+                    for (var c = 0; c < cmdText.length; c++) {
+                        cmdSpan.textContent += cmdText[c];
+                        await slp(50 + Math.random() * 40);
+                    }
+
+                    await slp(300);
+                    if (cursorSpan) cursorSpan.remove();
+
+                    // Line 2: output text
+                    var outputLine = document.createElement('div');
+                    outputLine.className = 'lt-line visible';
+                    outputLine.innerHTML = '<span class="lt-accent">Overengineering job application...</span>';
+                    terminal.appendChild(outputLine);
+
+                    // Brief spinner
+                    var spinnerFrames = ['\u280b', '\u2819', '\u2839', '\u2838', '\u283c', '\u2834', '\u2826', '\u2827', '\u2807', '\u280f'];
+                    var spinnerLine = document.createElement('div');
+                    spinnerLine.className = 'lt-line visible';
+                    spinnerLine.innerHTML = '<span class="lt-spinner">' + spinnerFrames[0] + '</span>';
+                    terminal.appendChild(spinnerLine);
+
+                    var frame = 0;
+                    var spinnerSpan = spinnerLine.querySelector('.lt-spinner');
+                    var spinnerInterval = setInterval(function () {
+                        frame++;
+                        if (spinnerSpan) spinnerSpan.textContent = spinnerFrames[frame % spinnerFrames.length];
+                    }, 80);
+
+                    await slp(800);
+                    clearInterval(spinnerInterval);
+
+                    // Replace spinner with checkmark
+                    spinnerLine.innerHTML = '<span class="lt-check">\u2713</span> <span style="color:#eee;">Done.</span>';
+
+                    await slp(400);
+
+                    // Genie minimize effect
+                    screen.classList.add('genie-out');
+
+                    // Use both animationend and timeout fallback for reliability
+                    screen.addEventListener('animationend', removeScreen);
+                    setTimeout(removeScreen, 700); // fallback for animationend
+                } catch (err) {
+                    console.error('Loading animation error:', err);
+                    removeScreen(); // Ensure screen is removed on error
+                }
             }
 
             document.body.style.overflow = 'hidden';
