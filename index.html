@@ -13,6 +13,7 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="chatbot.css">
 </head>
 
 <body>
@@ -808,18 +809,18 @@
 
             // ANSI block-letter art: "CLAUDE CODE" in a box-drawing frame
             var artLines = [
-                '\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557',
-                '\u2551                                            \u2551',
-                '\u2551  \u2588\u2580\u2580 \u2588   \u2584\u2580\u2584 \u2588 \u2588 \u2588\u2580\u2584 \u2588\u2580\u2580  \u2588\u2580\u2580 \u2584\u2580\u2584 \u2588\u2580\u2584 \u2588\u2580\u2580  \u2551',
-                '\u2551  \u2588   \u2588   \u2588\u2580\u2588 \u2588 \u2588 \u2588 \u2588 \u2588\u2580\u2580  \u2588   \u2588 \u2588 \u2588 \u2588 \u2588\u2580\u2580  \u2551',
-                '\u2551  \u2580\u2580\u2580 \u2580\u2580\u2580 \u2580 \u2580 \u2580\u2584\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580  \u2580\u2580\u2580 \u2580\u2584\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580  \u2551',
-                '\u2551                                            \u2551',
+                '\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557',
+                '\u2551 \u2551',
+                '\u2551 \u2588\u2580\u2580 \u2588 \u2584\u2580\u2584 \u2588 \u2588 \u2588\u2580\u2584 \u2588\u2580\u2580 \u2588\u2580\u2580 \u2584\u2580\u2584 \u2588\u2580\u2584 \u2588\u2580\u2580 \u2551',
+                '\u2551 \u2588 \u2588 \u2588\u2580\u2588 \u2588 \u2588 \u2588 \u2588 \u2588\u2580\u2580 \u2588 \u2588 \u2588 \u2588 \u2588 \u2588\u2580\u2580 \u2551',
+                '\u2551 \u2580\u2580\u2580 \u2580\u2580\u2580 \u2580 \u2580 \u2580\u2584\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580 \u2580\u2584\u2580 \u2580\u2580\u2580 \u2580\u2580\u2580 \u2551',
+                '\u2551 \u2551',
                 'TYPED',
-                '\u2551                                            \u2551',
-                '\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d'
+                '\u2551 \u2551',
+                '\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d'
             ];
 
-            var typedContent = '\u2551  > made with claude code                   \u2551';
+            var typedContent = '\u2551 > made with claude code \u2551';
             var FRAME_CHARS = '\u2554\u2550\u2557\u2551\u255a\u255d';
             var BLOCK_CHARS = '\u2588\u2580\u2584';
             var hasPlayed = false;
@@ -868,7 +869,6 @@
                 if (hasPlayed) return;
                 hasPlayed = true;
                 terminal.textContent = '';
-
                 for (var lineIdx = 0; lineIdx < artLines.length; lineIdx++) {
                     if (artLines[lineIdx] === 'TYPED') {
                         await typeLine(typedContent);
@@ -877,13 +877,11 @@
                         await sleep(90);
                     }
                 }
-
                 // Add blinking cursor
                 var cursor = document.createElement('span');
                 cursor.className = 'cc-cursor';
                 cursor.textContent = '\u2588';
                 terminal.appendChild(cursor);
-
                 // Start periodic glitch on block chars
                 setTimeout(startGlitch, 2000);
             }
@@ -892,7 +890,6 @@
                 var blockSpans = terminal.querySelectorAll('.cc-block');
                 if (!blockSpans.length) return;
                 var glitchChars = '\u2591\u2592\u2593\u2588\u2580\u2584\u256c\u2560\u2563\u2566\u2569';
-
                 setInterval(function () {
                     var idx = Math.floor(Math.random() * blockSpans.length);
                     var span = blockSpans[idx];
@@ -913,10 +910,10 @@
                     }
                 });
             }, { threshold: 0.3 });
-
             badgeObserver.observe(badge);
         })();
     </script>
+    <script src="chatbot.js"></script>
 </body>
 
 </html>
