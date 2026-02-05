@@ -771,6 +771,27 @@ h1 {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
+/* AI Card Link Styles */
+.ai-card-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+}
+
+.external-link-indicator {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    color: #ccc;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.ai-card-link:hover .external-link-indicator {
+    color: #6aaadb;
+    transform: translate(2px, -2px);
+}
+
 .icon-box.blue-outline {
     width: 48px;
     height: 48px;

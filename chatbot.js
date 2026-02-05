@@ -76,36 +76,44 @@ function injectChatbotUI() {
         <div class="chatbot-window" id="chatbot-window">
             <div class="chatbot-header">
                 <div class="chatbot-title">
-                    <h3>Tomas O'Keefe</h3>
-                    <span>Virtual Advocate</span>
+                    <div class="chatbot-avatar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                            <path d="M12 2a10 10 0 0 1 10 10"></path>
+                        </svg>
+                    </div>
+                    <div class="chatbot-title-text">
+                        <h3>Tomas O'Keefe</h3>
+                        <span>Virtual Advocate</span>
+                    </div>
                 </div>
                 <div class="chatbot-controls">
                     <button id="chatbot-close" aria-label="Close chat">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
                     </button>
                 </div>
             </div>
-            
+
             <div class="chatbot-messages" id="chatbot-messages">
                 <!-- Messages will appear here -->
             </div>
-            
+
             <div class="chatbot-input-area">
                 <div class="chatbot-input-wrapper">
-                    <textarea id="chatbot-input" class="chatbot-input" placeholder="Ask about Tomas..." rows="1"></textarea>
+                    <textarea id="chatbot-input" class="chatbot-input" placeholder="Ask me anything about Tomas..." rows="1"></textarea>
                     <button id="chatbot-send" class="chatbot-send-btn" aria-label="Send message">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5l7 7-7 7"></path>
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-        
+
         <button class="chatbot-toggle" id="chatbot-toggle" aria-label="Open chat">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
