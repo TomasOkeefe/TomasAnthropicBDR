@@ -1,9 +1,14 @@
 // Chatbot Logic
 
 // Configuration
+const PING_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '/api/ping'
+    : 'https://tomasanthropicbdr.onrender.com/api/ping';
+
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? '/api/chat'
     : 'https://tomasanthropicbdr.onrender.com/api/chat';
+
 const SYSTEM_PROMPT = `You are "Claude", an AI assistant created by Anthropic. However, in this specific context, you are also an expert recruiter and enthusiastic advocate for Tomas O'Keefe, who is applying for a Business Development Representative (BDR) role at Anthropic in NYC.
 
 IMPORTANT: If asked about your underlying model or who made you, you MUST say you are Claude from Anthropic. Do not mention OpenAI.
@@ -42,6 +47,7 @@ let container, toggleBtn, windowEl, messagesEl, inputEl, sendBtn, headerCloseBtn
 document.addEventListener('DOMContentLoaded', () => {
     injectChatbotUI();
     bindEvents();
+    wakeUpServer();
 
     // Check if we need to show welcome message
     if (messages.length === 0) {
@@ -51,6 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function wakeUpServer() {
+    console.log('Waking up server...');
+    fetch(PING_URL)
+        .then(res => {
+            if (res.ok) console.log('Server is awake!');
+            else console.warn('Server wake-up failed:', res.status);
+        })
+        .catch(err => console.warn('Server wake-up error:', err));
+}
 
 function injectChatbotUI() {
     container = document.createElement('div');
@@ -174,17 +190,17 @@ function handleSendMessage() {
 function addMessage(msg) {
     const div = document.createElement('div');
     div.className = `message ${msg.role === 'assistant' ? 'bot' : 'user'}`;
+    div.innerHTML = formatMessage(msg.content);
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div; // Return the element so we can update it if needed
+}
 
-    // Convert newlines to breaks for display
-    const formattedContent = msg.content
+function formatMessage(content) {
+    return content
         .replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape html
         .replace(/\n/g, '<br>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // bold support
-
-    div.innerHTML = formattedContent;
-
-    messagesEl.appendChild(div);
-    scrollToBottom();
 }
 
 function showTypingIndicator() {
@@ -216,9 +232,7 @@ function scrollToBottom() {
 async function callClaude(userMessage) {
     showTypingIndicator();
 
-    // Prepare message history for OpenAI
-    // OpenAI expects { role, content } objects.
-    // System prompt is passed as the first message.
+    // Prepare message history
     const apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT }
     ];
@@ -228,6 +242,8 @@ async function callClaude(userMessage) {
         .slice(-10)
         .map(el => {
             const isUser = el.classList.contains('user');
+            // We need to try and reverse-engineer the original text from innerHTML for context
+            // But for simplicity, we'll just use textContent which strips HTML
             return {
                 role: isUser ? 'user' : 'assistant',
                 content: el.textContent
@@ -235,9 +251,15 @@ async function callClaude(userMessage) {
         });
     apiMessages.push(...history);
 
-    // Add current user message
-    messages.push({ role: 'user', content: userMessage });
-    apiMessages.push({ role: 'user', content: userMessage });
+    // Add current user message (it's already in the DOM, so might be duplicated in history selector above if we are not careful)
+    // Actually, we just added it to the DOM in handleSendMessage.
+    // The querySelectorAll above will capture it.
+    // So we DON'T need to push userMessage again to apiMessages if it was just added to DOM.
+    // Wait, the history selector uses existing messages.
+    // handleSendMessage calls addMessage THEN callClaude.
+    // So the latest user message IS in the DOM.
+    // However, the history limit is 10.
+    // Let's just trust the DOM extraction.
 
     try {
         const response = await fetch(API_URL, {
@@ -246,32 +268,63 @@ async function callClaude(userMessage) {
                 'content-type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini', // Cost effective manual override
+                model: 'gpt-4o-mini',
                 messages: apiMessages
             })
         });
 
-        const data = await response.json();
-
         removeTypingIndicator();
 
-        if (data.error) {
-            console.error('API Error:', data.error);
-            addMessage({ role: 'assistant', content: `**Error**: ${data.error.message || 'Something went wrong.'}` });
-        } else {
-            // OpenAI response structure: data.choices[0].message.content
-            const reply = data.choices?.[0]?.message?.content;
-            if (reply) {
-                messages.push({ role: 'assistant', content: reply });
-                addMessage({ role: 'assistant', content: reply });
-            } else {
-                addMessage({ role: 'assistant', content: "**Error**: No response text received." });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error:', errorText);
+            addMessage({ role: 'assistant', content: `**Error**: Could not connect to server.` });
+            return;
+        }
+
+        // Create a new empty message bubble for the stream
+        const botMessageDiv = addMessage({ role: 'assistant', content: '' });
+        let fullResponse = '';
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            // OpenAI/Server-Sent Events format: data: {...}
+            // We might get multiple lines in one chunk
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const jsonStr = line.slice(6);
+                    if (jsonStr.trim() === '[DONE]') continue;
+
+                    try {
+                        const json = JSON.parse(jsonStr);
+                        const content = json.choices?.[0]?.delta?.content || '';
+                        if (content) {
+                            fullResponse += content;
+                            botMessageDiv.innerHTML = formatMessage(fullResponse);
+                            scrollToBottom();
+                        }
+                    } catch (e) {
+                        // ignore parse errors for partial chunks
+                        console.debug('JSON parse error', e);
+                    }
+                }
             }
         }
+
+        // Save to state if needed (though we rely on DOM)
+        messages.push({ role: 'assistant', content: fullResponse });
 
     } catch (err) {
         removeTypingIndicator();
         console.error(err);
-        addMessage({ role: 'assistant', content: "**Connection Error**: Could not reach backend server. Make sure you are running 'node server.js'." });
+        addMessage({ role: 'assistant', content: "**Connection Error**: Could not reach backend server." });
     }
 }

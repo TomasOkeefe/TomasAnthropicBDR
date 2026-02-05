@@ -17,30 +17,56 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 // Proxy Endpoint
+// Wake-up Endpoint
+app.get('/api/ping', (req, res) => {
+    res.status(200).send('pong');
+});
+
+// Proxy Endpoint
 app.post('/api/chat', async (req, res) => {
     try {
+        // Enable streaming from OpenAI
+        const requestBody = {
+            ...req.body,
+            stream: true
+        };
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify(requestBody)
         });
 
-        const data = await response.json();
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'OpenAI API Error');
+        }
 
-        // Pass through the status code
-        res.status(response.status).json(data);
+        // Set headers for SSE-like behavior
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        // Pipe the response directly to the client
+        response.body.pipe(res);
 
     } catch (error) {
         console.error('Proxy Error:', error);
-        res.status(500).json({
-            error: {
-                message: 'Internal Server Error',
-                details: error.message
-            }
-        });
+        // If headers haven't been sent, send JSON error
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: {
+                    message: 'Internal Server Error',
+                    details: error.message
+                }
+            });
+        } else {
+            // Stream was already started, end it
+            res.end();
+        }
     }
 });
 
