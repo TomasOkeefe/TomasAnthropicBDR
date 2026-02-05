@@ -93,13 +93,13 @@
                         <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                 </a>
-                <a href="https://www.linkedin.com/in/tomasokeefe/" target="_blank" rel="noopener noreferrer"
-                    class="btn-secondary">
+                <button onclick="openResume()" class="btn-secondary"
+                    style="cursor: pointer; background: transparent; border: 1px solid rgba(255,255,255,0.2);">
                     <span class="nav-content">
                         <span class="nav-text">View Specs</span>
                         <span class="nav-text-hover">View Specs</span>
                     </span>
-                </a>
+                </button>
             </div>
         </section>
 
@@ -403,7 +403,67 @@
         </div>
     </footer>
 
+    <!-- Resume Popup Overlay -->
+    <div id="resume-overlay" class="resume-overlay" onclick="closeResume(event)">
+        <div class="resume-window">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <div class="chatbot-avatar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="chatbot-title-text">
+                        <h3>Tomas O'Keefe</h3>
+                        <span>Resume_2026.pdf</span>
+                    </div>
+                </div>
+                <div class="chatbot-controls">
+                    <a href="TomasOKeefe_AE_Resume_2026.pdf" download class="control-btn" aria-label="Download Resume"
+                        style="margin-right: 4px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </a>
+                    <button onclick="closeResume()" aria-label="Close resume">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="resume-content">
+                <iframe src="TomasOKeefe_AE_Resume_2026.pdf" width="100%" height="100%"
+                    style="border: none; border-radius: 0 0 24px 24px;"></iframe>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Resume Popup Logic
+        function openResume() {
+            document.getElementById('resume-overlay').classList.add('is-open');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling bg
+        }
+
+        function closeResume(e) {
+            // If e is passed (click event), only close if clicked on overlay (background)
+            if (e && !e.target.classList.contains('resume-overlay')) return;
+
+            document.getElementById('resume-overlay').classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
         // ── Loading Screen Animation ──
         (function () {
             var screen = document.getElementById('loadingScreen');
