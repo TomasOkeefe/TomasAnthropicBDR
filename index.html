@@ -446,10 +446,17 @@
 
                 // Genie minimize effect
                 screen.classList.add('genie-out');
-                screen.addEventListener('animationend', function () {
+
+                // Use both animationend and timeout fallback for reliability
+                var removed = false;
+                function removeScreen() {
+                    if (removed) return;
+                    removed = true;
                     screen.remove();
                     document.body.style.overflow = '';
-                });
+                }
+                screen.addEventListener('animationend', removeScreen);
+                setTimeout(removeScreen, 700); // fallback
             }
 
             document.body.style.overflow = 'hidden';
