@@ -1,7 +1,9 @@
 // Chatbot Logic
 
 // Configuration
-const API_URL = '/api/chat'; // Proxy endpoint
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '/api/chat'
+    : 'https://tomasanthropicbdr.onrender.com/api/chat';
 const SYSTEM_PROMPT = `You are "Claude", an AI assistant created by Anthropic. However, in this specific context, you are also an expert recruiter and enthusiastic advocate for Tomas O'Keefe, who is applying for a Business Development Representative (BDR) role at Anthropic in NYC.
 
 IMPORTANT: If asked about your underlying model or who made you, you MUST say you are Claude from Anthropic. Do not mention OpenAI.
